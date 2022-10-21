@@ -1,123 +1,71 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module Main where
+
+import Config
+import DataModels
 
 import Graphics.Gloss
 import Graphics.Gloss.Data.ViewPort
+import Graphics.Gloss.Interface.Pure.Game
 
--- | Configurations
-fps :: Int
-fps = 60
-
-width, height, offset :: Int
-width  = 400
-height = 400
-offset = 100
-
-window :: Display
-window = InWindow "dev" (width, height) (offset, offset)
-
-background :: Color
-background = white
-
--- | Data Models
-type Radius = Float
-type Position = (Float, Float)
-type Height = Float
-type Width = Float
-
-data Ball = Ball
-   { ballPos :: Position -- ^ Pong ball (x, y) location
-   , ballRadius :: Float -- ^ Pong ball radius
-   , ballVel :: Position -- ^ Pong ball (x, y) velocity
-   , ballColor :: Color
-   , ballShape :: Picture
-   } deriving Show
-
-data Wall = Wall
-   { wallPos :: Position
-   , wallHeight :: Height
-   , wallWidth :: Width
-   , wallColor :: Color
-   , wallShape :: Picture
-   } deriving Show
-
-data Player = Player
-   { playerPos :: Position -- ^ Player (x, y) location
-   , playerHeight :: Height -- ^ Player height
-   , playerWidth :: Width -- ^ Player width
-   , playerColor :: Color
-   , playerShape :: Picture
-   } deriving Show
-
-data Game = Game
-   { gameBall :: Ball
-   , walls :: [Wall]
-   , players :: [Player]
-   } deriving Show
-
--- | Objects
-ball :: Ball
-ball = Ball
-   { ballPos = (0, 0)
-   , ballRadius = 10
-   , ballVel = (50, 45)
-   , ballColor = dark red
-   , ballShape = circle 10
-   }
-   
-topWall :: Wall
-topWall = Wall
-   { wallPos = (0, 200)
-   , wallHeight = 10
-   , wallWidth = 400
-   , wallColor = dark red
-   , wallShape = rectangleSolid 400 10
-   }
-
-bottomWall :: Wall
-bottomWall = Wall
-   { wallPos = (0, -200)
-   , wallHeight = 10
-   , wallWidth = 400
-   , wallColor = dark red
-   , wallShape = rectangleSolid 400 10
-   }
-
-playerOne :: Player
-playerOne = Player
-   { playerPos = (-190,0)
-   , playerHeight = 50
-   , playerWidth = 10
-   , playerColor = dark red
-   , playerShape = rectangleSolid 10 50
-   }
-
-playerTwo :: Player
-playerTwo = Player
-   { playerPos = (190,0)
-   , playerHeight = 50
-   , playerWidth = 10
-   , playerColor = dark red
-   , playerShape = rectangleSolid 10 50
-   }
-
--- | The starting state for the game of Pong.
-initialState :: Game
-initialState = Game
-   { gameBall = ball
-   , walls = [ topWall, bottomWall ]
-   , players = [ playerOne, playerTwo ]
-   }
+import Control.Lens
+import Control.Lens.Operators
 
 renderBall :: Ball -> Picture
 renderBall ball = uncurry translate (ballPos ball)
                   $ color (ballColor ball)
                   $ ballShape ball
 
+
+
+setBallPos :: Ball -> Position -> Ball
+setBallPos ball@(Ball (x, y) diam vel col shp) (x',y') =
+   ball { ballPos = (x', y') , ballDiam = diam
+        , ballVel = vel, ballColor = col
+        , ballShape = shp }
+
+
+
+setBallVel :: Ball -> Position -> Ball
+setBallVel ball@(Ball pos diam (vx, vy) col shp) (vx',vy') =
+   ball { ballPos = pos , ballDiam = diam
+        , ballVel = (vx', vy'), ballColor = col
+        , ballShape = shp }
+
+
+
+setBallyVel :: Ball -> Float -> Ball
+setBallyVel ball@(Ball pos diam (vx, vy) col shp) vel =
+   ball { ballPos = pos , ballDiam = diam
+        , ballVel = (vx, vel), ballColor = col
+        , ballShape = shp }
+
+
+
+setBallxVel :: Ball -> Float -> Ball
+setBallxVel ball@(Ball pos diam (vx, vy) col shp) vel =
+   ball { ballPos = pos , ballDiam = diam
+        , ballVel = (vel, vy), ballColor = col
+        , ballShape = shp }
+
+
+
+setPlayerPos :: Player -> Position -> Player
+setPlayerPos player@(Player (x, y) hei wid col shp) (x', y') =
+   player { playerPos = (x', y'), playerHeight = hei
+          , playerWidth = wid, playerColor = col
+          , playerShape = shp}
+
+
+
 renderPlayers :: [Player] -> Picture
 renderPlayers players =
-   pictures [ translate (fst $ playerPos player) (0)
+   pictures [ translate (fst $ playerPos player) (snd $ playerPos player)
             $ color (playerColor player)
             $ playerShape player | player <- players ]
+
+
 
 renderWalls :: [Wall] -> Picture
 renderWalls walls =
@@ -125,74 +73,105 @@ renderWalls walls =
             $ color (wallColor wall)
             $ wallShape wall | wall <- walls ]
 
+
+
 -- | Functions
 render :: Game -> Picture
-render game = pictures [ renderWalls (walls game)
-                       , renderPlayers (players game)
-                       , renderBall (gameBall game) ]
+render game@(Game ball topWall bottomWall playerOne playerTwo) =
+   pictures [ renderWalls [topWall, bottomWall]
+            , renderPlayers [playerOne, playerTwo]
+            , renderBall ball ]
+
+
 
 moveBall :: Float -> Game -> Game
-moveBall delta game = game {
-      gameBall = Ball {
-         ballPos    = (x', y'),
-         ballRadius = (ballRadius $ gameBall game),
-         ballVel    = (ballVel $ gameBall game),
-         ballColor  = (ballColor $ gameBall game),
-         ballShape  = (ballShape $ gameBall game)
-      }
-   } where
-   (x, y) = ballPos $ gameBall game
-   (vx, vy) = ballVel $ gameBall game
-   x' = x + vx * delta -- ^ new x velocity
-   y' = y + vy * delta -- ^ new y velocity
+moveBall delta game@(Game ball@(Ball (x, y) _ (vx, vy) _ _) _ _ _ _) =
+   game { gameBall = setBallPos ball (x', y') } where
+      x' = x + vx * delta
+      y' = y + vy * delta
 
 
--- | Detect a collision with a paddle.
-paddleCollided :: Position -> Radius -> Bool
-paddleCollided (x, y) radius = leftPaddleCollided || rightPaddleCollided
-   where
-   leftPaddleCollided  = x - (radius * 2) <= (- fromIntegral width) / 2
-   rightPaddleCollided = x + (radius * 2) >= fromIntegral width / 2
+
+paddleCollided :: Ball -> Player -> Player -> (Bool, Bool)
+paddleCollided (Ball (bx, by) _ _ _ _)
+               (Player (p1x, p1y) p1h p1w _ _)
+               (Player (p2x, p2y) p2h p2w _ _)
+               = (lPC || rPC, lUP || rUP) where
+   lPC = bx < p1x + p1w && by < p1y + (p1h / 1.5) && by > p1y - (p1h / 1.5)
+   rPC = bx >= p2x - p2w && by < p2y + (p2h / 1.5) && by > p2y - (p2h / 1.5)
+   lUP | lPC && by > p1y = True
+       | otherwise = False
+   rUP | rPC && by > p2y = True
+       | otherwise = False
+
+
+
 
 paddleBounce :: Game -> Game
-paddleBounce game = game {
-      gameBall = Ball {
-         ballPos    = (ballPos $ gameBall game),
-         ballRadius = (ballRadius $ gameBall game),
-         ballVel    = (vx', vy),
-         ballColor  = (ballColor $ gameBall game),
-         ballShape  = (ballShape $ gameBall game)
-      }
-   } where
-   radius = ballRadius $ gameBall game
-   (vx, vy) = ballVel $ gameBall game
-   vx' | paddleCollided (ballPos $ gameBall game) radius = vx * (-1)
+paddleBounce game@(Game ball@(Ball pos diam (vx, vy) _ _) _ _ p1 p2) =
+   game { gameBall = setBallVel ball (vx', vy') } where
+   collision = paddleCollided ball p1 p2
+   collided = fst collision
+   upperPart = snd collision
+   vx' | collided = vx * (-1) * 1.025
        | otherwise = vx
+   vy' | collided && upperPart && vy < 0 = vy * (-1)
+       | collided && not upperPart && vy > 0 = vy * (-1)
+       | otherwise = vy
 
--- | Detect a collision with one of the side walls.
-wallCollided :: Position -> Radius -> Bool 
-wallCollided (_, y) radius = topCollided || bottomCollided where
-   topCollided    = y - (radius + 5) <= (- fromIntegral width) / 2 
-   bottomCollided = y + (radius + 5) >=  fromIntegral width / 2
+
+
+wallCollided :: Position -> Diameter -> Bool 
+wallCollided (_, y) diam = topCollided || bottomCollided where
+   topCollided    = y - (diam + 5) <= (- fromIntegral width) / 2 
+   bottomCollided = y + (diam + 5) >=  fromIntegral width / 2
+
 
 
 wallBounce :: Game -> Game
-wallBounce game = game {
-      gameBall = Ball {
-         ballPos = (ballPos $ gameBall game),
-         ballRadius = (ballRadius $ gameBall game),
-         ballVel = (vx, vy'),
-         ballColor = (ballColor $ gameBall game),
-         ballShape = (ballShape $ gameBall game)
-      }
-   } where
-   pos = ballPos $ gameBall game
-   radius = ballRadius $ gameBall game
-   (vx, vy) = ballVel $ gameBall game
-   vy' | wallCollided pos radius = vy * (-1)
-       | otherwise = vy
+wallBounce game@(Game ball@(Ball pos diam (vx, vy) _ _) _ _ _ _) =
+   game { gameBall = setBallVel ball (vx', vy') } where
+      vx' | wallCollided pos diam = vx - 4
+          | otherwise = vx
+      vy' | wallCollided pos diam = (vy) * (-1)
+          | otherwise = vy
+
+
+
+handleInput :: Event -> Game -> Game
+handleInput (EventKey (Char 's') _ _ _)
+            game@(Game ball@(Ball (x, y) _ _ _ _) _ _ _ _) =
+            game { gameBall = setBallVel (setBallPos ball (0, 0)) (-150, 50) }
+
+handleInput (EventKey (SpecialKey KeyUp) _ _ _)
+            game@(Game _ _ _ p@(Player (x, y) hei _ _ _) _) =
+            game { player1 = setPlayerPos p (x, y') } where
+            y' | y + (hei / 2) <= 190 = y + 10
+               | otherwise = y
+
+handleInput (EventKey (SpecialKey KeyDown) _ _ _)
+            game@(Game _ _ _ p@(Player (x, y) hei _ _ _) _) =
+            game { player1 = setPlayerPos p (x, y') } where
+            y' | y - (hei / 2) >= -190 = y - 10
+               | otherwise = y
+
+handleInput (EventKey (SpecialKey KeyLeft) _ _ _)
+            game@(Game _ _ _ _ p@(Player (x, y) hei _ _ _)) =
+            game { player2 = setPlayerPos p (x, y') } where
+            y' | y + (hei / 2) <= 190 = y + 10
+               | otherwise = y
+
+handleInput (EventKey (SpecialKey KeyRight) _ _ _)
+            game@(Game _ _ _ _ p@(Player (x, y) hei _ _ _)) =
+            game { player2 = setPlayerPos p (x, y') } where
+            y' | y - (hei / 2) >= -190 = y - 10
+               | otherwise = y
+
+handleInput _ game = game
+
+
 
 main :: IO ()
-main = simulate window background fps initialState render update where
-   update :: ViewPort -> Float -> Game -> Game
-   update _ delta = wallBounce . paddleBounce . moveBall delta
+main = play window background fps initialState render handleInput update where
+   update :: Float -> Game -> Game
+   update delta = paddleBounce . wallBounce . moveBall delta
