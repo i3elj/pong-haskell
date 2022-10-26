@@ -12,12 +12,27 @@ import Graphics.Gloss.Interface.Pure.Game
 import Control.Lens
 import Control.Lens.Operators
 
+-- TODO: fix the types
+-- makeLine :: ((Int, Int), (Int, Int)) -> Picture
+-- makeLine ((a,as),(b,bs)) = color white $ line [a', b'] where
+--    a' = (fromIntegral a, fromIntegral as)
+--    b' = (fromIntegral b, fromIntegral bs)
+
+-- makeRange :: [(Int, Int)]
+-- makeRange = [(0, x) | x <- [-200..210], mod x 10 == 0]
+
+-- toTupleList :: [(Float, Float)] -> [((Float, Float), (Float, Float))]
+-- toTupleList (x:xs) | tail xs == [] = []
+--                    | otherwise = [(x,head xs)] ++ toTupleList (tail xs)
+
+-- renderDelimeter :: Picture
+-- renderDelimeter = map makeLine $ toTupleList makeRange
+
+
 renderBall :: Ball -> Picture
 renderBall ball = uncurry translate (ballPos ball)
                   $ color (ballColor ball)
                   $ ballShape ball
-
-
 
 setBallPos :: Ball -> Position -> Ball
 setBallPos ball@(Ball (x, y) diam vel col shp) (x',y') =
@@ -25,23 +40,17 @@ setBallPos ball@(Ball (x, y) diam vel col shp) (x',y') =
         , ballVel = vel, ballColor = col
         , ballShape = shp }
 
-
-
 setBallVel :: Ball -> Position -> Ball
 setBallVel ball@(Ball pos diam (vx, vy) col shp) (vx',vy') =
    ball { ballPos = pos , ballDiam = diam
         , ballVel = (vx', vy'), ballColor = col
         , ballShape = shp }
 
-
-
 setBallyVel :: Ball -> Float -> Ball
 setBallyVel ball@(Ball pos diam (vx, vy) col shp) vel =
    ball { ballPos = pos , ballDiam = diam
         , ballVel = (vx, vel), ballColor = col
         , ballShape = shp }
-
-
 
 setBallxVel :: Ball -> Float -> Ball
 setBallxVel ball@(Ball pos diam (vx, vy) col shp) vel =
@@ -97,8 +106,8 @@ paddleCollided (Ball (bx, by) _ _ _ _)
                (Player (p1x, p1y) p1h p1w _ _)
                (Player (p2x, p2y) p2h p2w _ _)
                = (lPC || rPC, lUP || rUP) where
-   lPC = bx < p1x + p1w && by < p1y + (p1h / 1.5) && by > p1y - (p1h / 1.5)
-   rPC = bx >= p2x - p2w && by < p2y + (p2h / 1.5) && by > p2y - (p2h / 1.5)
+   lPC = bx < p1x + p1w && by < p1y + (p1h / 1.5) && by > p1y - (p1h / 1.5) && bx > p1x
+   rPC = bx >= p2x - p2w && by < p2y + (p2h / 1.5) && by > p2y - (p2h / 1.5) && bx < p2x
    lUP | lPC && by > p1y = True
        | otherwise = False
    rUP | rPC && by > p2y = True
@@ -143,28 +152,28 @@ handleInput (EventKey (Char 's') _ _ _)
             game@(Game ball@(Ball (x, y) _ _ _ _) _ _ _ _) =
             game { gameBall = setBallVel (setBallPos ball (0, 0)) (-150, 50) }
 
-handleInput (EventKey (SpecialKey KeyUp) _ _ _)
+handleInput (EventKey (SpecialKey KeyUp) Down _ _)
             game@(Game _ _ _ p@(Player (x, y) hei _ _ _) _) =
             game { player1 = setPlayerPos p (x, y') } where
-            y' | y + (hei / 2) <= 190 = y + 10
+            y' | y + (hei / 2) <= 190 = y + 14.25
                | otherwise = y
 
-handleInput (EventKey (SpecialKey KeyDown) _ _ _)
+handleInput (EventKey (SpecialKey KeyDown) Down _ _)
             game@(Game _ _ _ p@(Player (x, y) hei _ _ _) _) =
             game { player1 = setPlayerPos p (x, y') } where
-            y' | y - (hei / 2) >= -190 = y - 10
+            y' | y - (hei / 2) >= -190 = y - 14.25
                | otherwise = y
 
-handleInput (EventKey (SpecialKey KeyLeft) _ _ _)
+handleInput (EventKey (SpecialKey KeyLeft) Down _ _)
             game@(Game _ _ _ _ p@(Player (x, y) hei _ _ _)) =
             game { player2 = setPlayerPos p (x, y') } where
-            y' | y + (hei / 2) <= 190 = y + 10
+            y' | y + (hei / 2) <= 190 = y + 14.25
                | otherwise = y
 
-handleInput (EventKey (SpecialKey KeyRight) _ _ _)
+handleInput (EventKey (SpecialKey KeyRight) Down _ _)
             game@(Game _ _ _ _ p@(Player (x, y) hei _ _ _)) =
             game { player2 = setPlayerPos p (x, y') } where
-            y' | y - (hei / 2) >= -190 = y - 10
+            y' | y - (hei / 2) >= -190 = y - 14.25
                | otherwise = y
 
 handleInput _ game = game
