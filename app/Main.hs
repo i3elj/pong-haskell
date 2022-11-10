@@ -20,6 +20,8 @@ main = play window background fps initialState renderGame handleInput update
    where update :: Float -> Game -> Game
          update delta = updateBPQueue
                       . addNewParticlesToGame
+                      . resetGameBall
+                      . resetGamePlayers
                       . checkForPoints
                       . paddleBounce
                       . wallBounce

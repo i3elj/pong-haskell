@@ -45,11 +45,11 @@ setBallxVel ball@(Ball pos diam (vx, vy) col shp) vel =
 resetBall :: Ball -> Ball
 resetBall ball@(Ball _ diam vel col shp) =
    ball { ballPos = (0, 0), ballDiam = diam
-        , ballVel = (-150, 50), ballColor = col
+        , ballVel = (0, 0), ballColor = col
         , ballShape = shp }
 
 moveBall :: Float -> Game -> (Float, Game)
-moveBall delta game@(Game ball@(Ball (x, y) _ (vx, vy) _ _) _ _ _ _ _) =
+moveBall delta game@(Game ball@(Ball (x, y) _ (vx, vy) _ _) _ _ _ _ _ _) =
    (delta ,game { gameBall = setBallPos ball (x', y') }) where
       x' = x + vx * delta
       y' = y + vy * delta

@@ -11,6 +11,8 @@ type BPQueue = [BallParticle]
 
 type CustomColor = (Float, Float, Float, Float)
 
+-- type Side = LeftP | RightP
+
 data Movement = IsMoving | IsStill deriving (Show, Eq)
 data Direction = GoingUp | GoingDown | None deriving (Show, Eq)
 
@@ -35,7 +37,6 @@ data Player = Player
    , playerColor :: Color
    , playerShape :: Picture
    , playerMov :: (Movement, Direction)
-   , playerPoints :: Int
    } deriving Show
 
 data Wall = Wall
@@ -53,4 +54,5 @@ data Game = Game
    , player1 :: Player
    , player2 :: Player
    , pQueue :: BPQueue
+   , scores :: (Int, Int)
    } deriving Show

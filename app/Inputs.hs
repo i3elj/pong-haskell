@@ -9,10 +9,9 @@ import Player
 import Ball
 
 handleInput :: Event -> Game -> Game
-handleInput (EventKey key upDown _ _) game@(Game ball _ _ p1 p2 _)
-   -- Restart the game
-   | key == (Char 's') = game { gameBall = resetBall ball }
-
+handleInput (EventKey key upDown _ _) game@(Game ball _ _ p1 p2 _ _)
+   -- Start game
+   | key == (SpecialKey KeySpace) = game { gameBall = setBallVel ball (150, 0) }
    -- Left Paddle
    | key == (SpecialKey KeyUp) && upDown == Up
       = game { player1 = setPlayerState p1 (IsStill, None) }

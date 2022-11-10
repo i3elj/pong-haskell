@@ -30,7 +30,7 @@ wallCollided (_, y) diam = topCollided || bottomCollided where
    bottomCollided = y + (diam + 5) >=  fromIntegral width / 2
 
 wallBounce :: Game -> Game
-wallBounce game@(Game ball@(Ball pos diam (vx, vy) _ _) _ _ _ _ _) =
+wallBounce game@(Game ball@(Ball pos diam (vx, vy) _ _) _ _ _ _ _ _) =
    game { gameBall = setBallVel ball (vx', vy') } where
       vx' | wallCollided pos diam = vx - 4
           | otherwise = vx
