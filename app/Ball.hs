@@ -4,13 +4,16 @@ import Graphics.Gloss
 
 import Types
 
+bvel :: Float
+bvel = 50
+
 ball :: Ball
 ball = Ball
    { ballPos = (0, 0)
-   , ballDiam = 10
-   , ballVel = (-150, 50)
+   , ballDiam = 14
+   , ballVel = (0, 0)
    , ballColor = white
-   , ballShape = circleSolid 10
+   , ballShape = circleSolid 14
    }
 
 renderBall :: Ball -> Picture

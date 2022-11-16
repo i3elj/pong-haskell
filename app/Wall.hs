@@ -8,26 +8,26 @@ import Ball
 
 topWall :: Wall
 topWall = Wall
-   { wallPos = (0, 200)
-   , wallHeight = 10
-   , wallWidth = 400
+   { wallPos = (0, (fromIntegral height)/2)
+   , wallHeight = fromIntegral height
+   , wallWidth = fromIntegral width
    , wallColor = white
-   , wallShape = rectangleSolid 400 10
+   , wallShape = rectangleSolid (fromIntegral width) 10
    }
 
 bottomWall :: Wall
 bottomWall = Wall
-   { wallPos = (0, -200)
-   , wallHeight = 400
-   , wallWidth = 10
+   { wallPos = (0, -(fromIntegral height)/2)
+   , wallHeight = fromIntegral height
+   , wallWidth = fromIntegral width
    , wallColor = white
-   , wallShape = rectangleSolid 400 10
+   , wallShape = rectangleSolid (fromIntegral width) 10
    }
 
 wallCollided :: Position -> Diameter -> Bool 
 wallCollided (_, y) diam = topCollided || bottomCollided where
-   topCollided    = y - (diam + 5) <= (- fromIntegral width) / 2 
-   bottomCollided = y + (diam + 5) >=  fromIntegral width / 2
+   topCollided    = y - (diam + 5) <= (- fromIntegral height) / 2 
+   bottomCollided = y + (diam + 5) >=  fromIntegral height / 2
 
 wallBounce :: Game -> Game
 wallBounce game@(Game ball@(Ball pos diam (vx, vy) _ _) _ _ _ _ _ _) =

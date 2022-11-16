@@ -5,11 +5,11 @@ import Graphics.Gloss
 import Types
 
 fps :: Int
-fps = 60
+fps = 65
 
 width, height, offset :: Int
-width  = 400
-height = 400
+width  = 1620
+height = 860
 offset = 100
 
 window :: Display
