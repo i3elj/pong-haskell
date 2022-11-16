@@ -37,6 +37,7 @@ data Player = Player
    , playerColor :: Color
    , playerShape :: Picture
    , playerMov :: (Movement, Direction)
+   , playerRotation :: Float
    } deriving Show
 
 data Wall = Wall

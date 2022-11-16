@@ -11,17 +11,21 @@ import Ball
 handleInput :: Event -> Game -> Game
 handleInput (EventKey key upDown _ _) game@(Game ball _ _ p1 p2 _ _)
    -- Start game
-   | key == (SpecialKey KeySpace) = game { gameBall = setBallVel ball (150, 0) }
+   | key == (SpecialKey KeySpace) = game { gameBall = setBallVel ball (250, 0) }
    -- Left Paddle
+   -- UP
    | key == (SpecialKey KeyUp) && upDown == Up
       = game { player1 = setPlayerState p1 (IsStill, None) }
    | key == (SpecialKey KeyUp) && upDown == Down
       = game { player1 = setPlayerState p1 (IsMoving, GoingUp) }
-
+   -- DOWN
    | key == (SpecialKey KeyDown) && upDown == Up
       = game { player1 = setPlayerState p1 (IsStill, None) }
    | key == (SpecialKey KeyDown) && upDown == Down
       = game { player1 = setPlayerState p1 (IsMoving, GoingDown) }
+   -- ROTATION
+   -- | key == (_ _) && _ == _
+   --    = game { player1 = rotatePlayerOne p1 2.0 }
 
    -- -- Right Paddle
    | key == (SpecialKey KeyLeft) && upDown == Up
