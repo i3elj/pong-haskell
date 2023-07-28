@@ -5,7 +5,7 @@ import Graphics.Gloss
 import Types
 
 fps :: Int
-fps = 65
+fps = 80
 
 width, height, offset :: Int
 width  = 1620
@@ -17,4 +17,3 @@ window = InWindow "dev:pong" (width, height) (offset, offset)
 
 background :: Color
 background = black
-

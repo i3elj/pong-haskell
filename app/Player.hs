@@ -31,40 +31,18 @@ playerTwo = Player
    }
 
 setPlayerPos :: Player -> Position -> Player
-setPlayerPos player@(Player pos hei wid  vel col shp mov deg) (x', y')
-   = player { playerPos   = (x', y') , playerHeight   = hei
-            , playerWidth = wid      , playerVel      = vel
-            , playerColor = col      , playerShape    = shp
-            , playerMov   = mov      , playerRotation = deg }
+setPlayerPos player (x', y') = player { playerPos = (x', y') }
 
 setPlayerState :: Player -> (Movement, Direction) -> Player
-setPlayerState player@(Player pos hei wid vel col shp mov deg) (mov', dir')
-   = player { playerPos   = pos          , playerHeight   = hei
-            , playerWidth = wid          , playerVel      = vel
-            , playerColor = col          , playerShape    = shp
-            , playerMov   = (mov', dir') , playerRotation = deg }
+setPlayerState player (mov', dir') = player { playerMov  = (mov', dir') }
 
 rotatePlayerOne :: Player -> Float -> Player
-rotatePlayerOne p@(Player pos hei wid vel col shp mov deg) deg'
-   | deg <= 45 = p { playerPos   = pos , playerHeight   = hei
-                   , playerWidth = wid , playerVel      = vel
-                   , playerColor = col , playerShape    = shp
-                   , playerMov   = mov , playerRotation = deg' }
-   | otherwise = p { playerPos   = pos , playerHeight   = hei
-                   , playerWidth = wid , playerVel      = vel
-                   , playerColor = col , playerShape    = shp
-                   , playerMov   = mov , playerRotation = deg }
+rotatePlayerOne p@(Player _ _ _ _ _ _ _ deg) deg'
+   = if deg <= 45 then p { playerRotation = deg' } else p
 
 rotatePlayerTwo :: Player -> Float -> Player
-rotatePlayerTwo p@(Player pos hei wid vel col shp mov deg) deg'
-   | deg <= -45 = p { playerPos   = pos , playerHeight   = hei
-                    , playerWidth = wid , playerVel      = vel
-                    , playerColor = col , playerShape    = shp
-                    , playerMov   = mov , playerRotation = deg' }
-   | otherwise = p { playerPos   = pos , playerHeight   = hei
-                   , playerWidth = wid , playerVel      = vel
-                   , playerColor = col , playerShape    = shp
-                   , playerMov   = mov , playerRotation = deg }
+rotatePlayerTwo p@(Player _ _ _ _ _ _ _ deg) deg'
+   = if deg <= -45 then p { playerRotation = deg' } else p
 
 movePlayerOne :: Float -> Game -> Game
 movePlayerOne delta game@(Game ball _ _
@@ -87,17 +65,9 @@ movePlayerTwo delta game@(Game ball _ _ _
             | otherwise = y
 
 resetPlayer :: Player -> Int -> Player
-resetPlayer p@(Player pos hei wid vel col shp mov deg) i
-   | i == 1 = p { playerPos = (-(fromIntegral width / 2) + 40,0)
-                , playerHeight   = hei, playerWidth = wid
-                , playerVel      = vel, playerColor = col
-                , playerShape    = shp, playerMov   = mov
-                , playerRotation = deg }
-   | i == 2 = p { playerPos = ((fromIntegral width/2) - 40,0)
-                , playerHeight   = hei, playerWidth = wid
-                , playerVel      = vel, playerColor = col
-                , playerShape    = shp, playerMov   = mov
-                , playerRotation = deg }
+resetPlayer p i = case i of
+   1 -> p { playerPos = (-(fromIntegral width / 2) + 40,0) }
+   2 -> p { playerPos = ((fromIntegral width / 2) - 40,0) }
 
 movePlayers :: (Float, Game) -> Game
 movePlayers (delta, game@(Game _ _ _ p1 p2 _ _))
@@ -149,7 +119,7 @@ paddleBounce game@(Game ball@(Ball pos diam (vx, vy) _ _) _ _ p1 p2 _ _)
       vx' | cld = vx * (-1) * 1.025
           | otherwise = vx
 
-      vy' | cld = (dis*1.5) + vy
+      vy' | cld = (dis * 1.5) + vy
           | otherwise = vy
 
       first  (a,_,_) = a

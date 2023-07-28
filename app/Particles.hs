@@ -28,8 +28,7 @@ updateBPQueue game@(Game _ _ _ _ _ pq _)
    = game { pQueue = filter (\x -> lifespan x > 0) $ map updateBParticle pq }
 
 setBParticleInfo :: BallParticle -> Float -> Diameter -> CustomColor -> BallParticle
-setBParticleInfo ballp@(BallParticle _ ball@(Ball pos diam vel col shp))
-                 ls' diam' (r,g,b,a)
+setBParticleInfo ballp@(BallParticle _ ball@(Ball pos diam vel col shp)) ls' diam' (r,g,b,a)
    = ballp { lifespan = ls' , format =
          Ball { ballPos = pos , ballDiam = diam'
               , ballVel = vel , ballColor = makeColor r g b (a - 0.015)
